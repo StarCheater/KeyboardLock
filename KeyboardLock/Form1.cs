@@ -8,8 +8,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
-using System.Windows.Input;
+using System.Windows.Forms;   
 
 namespace KeyboardLock
 {
@@ -22,8 +21,6 @@ namespace KeyboardLock
 
 
         public delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
-        private ProcessModule objCurrentModule;
-        private LowLevelKeyboardProc objKeyboardProcess;
         private IntPtr ptrHook;
         private KeysConverter kc = new KeysConverter();
         private const string passph = "DOST4321";
@@ -109,15 +106,7 @@ namespace KeyboardLock
 
         public static bool CheckKeys(Keys check, IEnumerable<Keys> keys)
         {
-            foreach (var key in keys)
-            {
-                if (key == check)
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return keys.Any(key => key == check);
         }
 
         private IntPtr captureKey(int nCode, IntPtr wp, IntPtr lp)
@@ -125,21 +114,23 @@ namespace KeyboardLock
             if (nCode >= 0)
             {
                 var objKeyInfo = (KBDLLHOOKSTRUCT)Marshal.PtrToStructure(lp, typeof(KBDLLHOOKSTRUCT));
-                label1.Text = kc.ConvertToString(objKeyInfo.key);
-                
-                label3.Text = GetCharFromKey(objKeyInfo.key).ToString();
-                
+                //label3.Text = GetCharFromKey(objKeyInfo.key).ToString();    //получаем введенный символ
                 if (objKeyInfo.flags >= 128) //Клавиша отпущенна
                 {
-                    
                     for (int i = 0; i < pass.Length - 1; i++) pass[i] = pass[i + 1];
-
-                    string sre = kc.ConvertToString(objKeyInfo.key);
-                    pass[pass.Length - 1] = ((sre.Length == 1)) ? sre[0] : ' '; /* : ((sre.Length == 2) && (sre[0] == 'D')) ? sre[1]//*/
-                    label2.Text = "|"+new string(pass)+"|";
+                    string sre = kc.ConvertToString(objKeyInfo.key);  //получаем нажатую КЛАВИШУ
+                    //label1.Text = sre;
+                    pass[pass.Length - 1] = sre.Length == 1 ? sre[0] : ' '; /* : ((sre.Length == 2) && (sre[0] == 'D')) ? sre[1]//*/
                 }
 
-                //if (!(CheckKeys(objKeyInfo.key, new[] { Keys.D0, Keys.D1, Keys.D2, Keys.D3, Keys.D4, Keys.D5, Keys.D6, Keys.D7, Keys.D8, Keys.D9, Keys.Delete, Keys.Back, Keys.Left, Keys.Right })))
+                if (
+                    !(CheckKeys(objKeyInfo.key,
+                        new[]
+                        {
+                            Keys.D0, Keys.D1, Keys.D2, Keys.D3, Keys.D4,
+                            Keys.D5, Keys.D6, Keys.D7, Keys.D8, Keys.D9,
+                            Keys.Delete, Keys.Back, Keys.Left, Keys.Right
+                        }))) ;
                 
                 return checkBox1.Checked ? (IntPtr) 1 : CallNextHookEx(ptrHook, nCode, wp, lp);
             }
@@ -159,16 +150,12 @@ namespace KeyboardLock
         {
             if (ptrHook == IntPtr.Zero)
             {
-              
-                ptrHook = SetWindowsHookEx(13, objKeyboardProcess, GetModuleHandle(objCurrentModule.ModuleName), 0);
-
+                ptrHook = SetWindowsHookEx(13, captureKey, GetModuleHandle(Process.GetCurrentProcess().MainModule.ModuleName), 0);
             }
         }
 
         private void Form1_Load(object sender, EventArgs e)
-        {
-            objCurrentModule = Process.GetCurrentProcess().MainModule;
-            objKeyboardProcess = captureKey;
+        {   
         }
 
         private void button1_Click(object sender, EventArgs e)
