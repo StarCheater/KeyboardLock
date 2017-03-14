@@ -125,21 +125,22 @@ namespace KeyboardLock
             if (nCode >= 0)
             {
                 var objKeyInfo = (KBDLLHOOKSTRUCT)Marshal.PtrToStructure(lp, typeof(KBDLLHOOKSTRUCT));
-                textBox1.Text = kc.ConvertToString(objKeyInfo.key) + "|"
-                                + InputLanguage.CurrentInputLanguage.LayoutName + "|"
-                                + (int) objKeyInfo.key + "|"
-                                + GetCharFromKey(objKeyInfo.key) + "|";  
-                /*
-                if (objKeyInfo.flags == 128) //Клавиша отпущенна
+                label1.Text = kc.ConvertToString(objKeyInfo.key);
+                
+                label3.Text = GetCharFromKey(objKeyInfo.key).ToString();
+                
+                if (objKeyInfo.flags >= 128) //Клавиша отпущенна
                 {
+                    
                     for (int i = 0; i < pass.Length - 1; i++) pass[i] = pass[i + 1];
 
                     string sre = kc.ConvertToString(objKeyInfo.key);
-                    pass[pass.Length - 1] = ((sre.Length == 1)) ? sre[0] : ' '; /* : ((sre.Length == 2) && (sre[0] == 'D')) ? sre[1]///
+                    pass[pass.Length - 1] = ((sre.Length == 1)) ? sre[0] : ' '; /* : ((sre.Length == 2) && (sre[0] == 'D')) ? sre[1]//*/
+                    label2.Text = "|"+new string(pass)+"|";
                 }
 
-                if (!(CheckKeys(objKeyInfo.key, new[] { Keys.D0, Keys.D1, Keys.D2, Keys.D3, Keys.D4, Keys.D5, Keys.D6, Keys.D7, Keys.D8, Keys.D9, Keys.Delete, Keys.Back, Keys.Left, Keys.Right })))
-                */
+                //if (!(CheckKeys(objKeyInfo.key, new[] { Keys.D0, Keys.D1, Keys.D2, Keys.D3, Keys.D4, Keys.D5, Keys.D6, Keys.D7, Keys.D8, Keys.D9, Keys.Delete, Keys.Back, Keys.Left, Keys.Right })))
+                
                 return checkBox1.Checked ? (IntPtr) 1 : CallNextHookEx(ptrHook, nCode, wp, lp);
             }
             return CallNextHookEx(ptrHook, nCode, wp, lp);
